@@ -9,8 +9,12 @@ public class ChatClientApp extends JFrame {
     private JButton sendButton;  // Button to send messages
     private JTextField serverIPField;  // Text field for entering server IP address
     private JButton connectButton;  // Button to connect to the server
-
+    private String username;
+    private JLabel usernameLabel;
+    
     public ChatClientApp() {
+
+    	
         setTitle("Chat Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(400, 300);
@@ -21,6 +25,8 @@ public class ChatClientApp extends JFrame {
         chatBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane userListScrollPane = new JScrollPane(chatBox);
 
+        
+        usernameLabel = new JLabel();
         messageInputField = new JTextField(20);
         sendButton = new JButton("Send");
         sendButton.addActionListener(new ActionListener() {
@@ -31,6 +37,7 @@ public class ChatClientApp extends JFrame {
 
         // Panel for text input and send button
         JPanel inputPanel = new JPanel();
+        inputPanel.add(usernameLabel);
         inputPanel.add(messageInputField);
         inputPanel.add(sendButton);
 
@@ -72,11 +79,30 @@ public class ChatClientApp extends JFrame {
     private void connectToServer() {
         String serverIP = serverIPField.getText().trim();
         if (!serverIP.isEmpty()) {
-            // Add code here to establish connection to the server using the provided IP address
             JOptionPane.showMessageDialog(this, "Connecting to server at IP: " + serverIP, "Info", JOptionPane.INFORMATION_MESSAGE);
+            
+            // Prompt for username
+            username = JOptionPane.showInputDialog(this, "Enter Username:");
+            
+            //send username to server
+            
+            //set usernameLabel
+            usernameLabel.setText(username);
+            
+            // Check username
+            if (!validateCredentials(username)) {
+                JOptionPane.showMessageDialog(this, "Invalid username. Exiting...", "Error", JOptionPane.ERROR_MESSAGE);
+                System.exit(0); // Terminate the application
+            }
+            
         } else {
             JOptionPane.showMessageDialog(this, "Please enter the server IP address", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+    
+    private boolean validateCredentials(String username) {
+    	
+        return username.equals("renzo") || username.equals("dhuvid") || username.equals("warren");
     }
 
     public static void main(String[] args) {
