@@ -2,8 +2,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+
 public class ChatClientApp extends JFrame {
-    private JList<String> chatBox;  // JList for displaying messages
+    
+	private static final long serialVersionUID = 1L;
+	private JList<String> chatBox;  // JList for displaying messages
     private DefaultListModel<String> messageListModel;  // DefaultListModel to store messages
     private JTextField messageInputField;  // Text field for typing messages
     private JButton sendButton;  // Button to send messages
@@ -11,7 +14,6 @@ public class ChatClientApp extends JFrame {
     private JButton connectButton;  // Button to connect to the server
     private String username;
     private JLabel usernameLabel;
-    
     public ChatClientApp() {
 
     	
@@ -25,7 +27,7 @@ public class ChatClientApp extends JFrame {
         chatBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane userListScrollPane = new JScrollPane(chatBox);
 
-        
+       
         usernameLabel = new JLabel();
         messageInputField = new JTextField(20);
         sendButton = new JButton("Send");
@@ -62,21 +64,53 @@ public class ChatClientApp extends JFrame {
         mainPanel.add(serverPanel, BorderLayout.NORTH);  // Adding server panel to the top of the main panel
 
         getContentPane().add(mainPanel);  // Adding main panel to the frame
-
+        EmojiListRenderer emojiListRenderer = new EmojiListRenderer();
+        chatBox.setCellRenderer(emojiListRenderer);
         setVisible(true);  // Making the frame visible
     }
 
+ // In ChatClientApp.java, inside the sendMessage method or another appropriate place
+
     private void sendMessage() {
-        String task = messageInputField.getText().trim();
-        if (!task.isEmpty()) {
-            messageListModel.addElement(task);  // Add message to the list model
-            messageInputField.setText("");  // Clear the message input field
+        String message = messageInputField.getText().trim();
+        if (!message.isEmpty()) {
+            if (message.startsWith("image:")) {
+                // If the message starts with "image:", it's an image message
+                String imagePath = message.substring(6); // Remove "image:" prefix
+                messageListModel.addElement(imagePath); // Add the image message to the list model
+               
+            } else {
+                // Otherwise, it's a text message
+                messageListModel.addElement(message); // Add the text message to the list model
+            }
+            messageInputField.setText(""); // Clear the message input field
         } else {
             JOptionPane.showMessageDialog(this, "Please enter a message", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void connectToServer() {
+
+	public class EmojiListRenderer extends DefaultListCellRenderer {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            JLabel renderer = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            String word = (String) value;
+            String imagePath = EmojiHashMap.imagePath(word);
+            if (imagePath != null) {
+                ImageIcon icon = new ImageIcon(imagePath);
+                icon = new ImageIcon(icon.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
+                renderer.setIcon(icon);
+                renderer.setText(""); // Clear text
+            }
+
+            return renderer;
+        }
+    }
+
+ private void connectToServer() {
         String serverIP = serverIPField.getText().trim();
         if (!serverIP.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Connecting to server at IP: " + serverIP, "Info", JOptionPane.INFORMATION_MESSAGE);
@@ -102,7 +136,7 @@ public class ChatClientApp extends JFrame {
     
     private boolean validateCredentials(String username) {
     	
-        return username.equals("renzo") || username.equals("dhuvid") || username.equals("warren");
+        return username.equals("renzo") || username.equals("dhruvit") || username.equals("warren");
     }
 
     public static void main(String[] args) {
