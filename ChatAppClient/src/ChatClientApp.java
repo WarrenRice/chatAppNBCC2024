@@ -1,6 +1,28 @@
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
+
+
+//Add ENTER KEY listener
 
 public class ChatClientApp extends JFrame {
     private JList<String> chatBox;  // JList for displaying messages
@@ -8,16 +30,22 @@ public class ChatClientApp extends JFrame {
     private JTextField messageInputField;  // Text field for typing messages
     private JButton sendButton;  // Button to send messages
     private JTextField serverIPField;  // Text field for entering server IP address
+    private JTextField portField; // Text field for entering server port number
     private JButton connectButton;  // Button to connect to the server
     private String username;
     private JLabel usernameLabel;
     
+    private String serverIP;
+    private String portStr;
+    private int port;
+    
+    private static final String MESSAGE_PROPERTY_DELIMETER = "▐";
+    private static final String MESSAGE_SET_DELIMETER = "†";
+    
     public ChatClientApp() {
-
-    	
         setTitle("Chat Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 300);
+        setSize(600, 300);
 
         // Initialize components
         messageListModel = new DefaultListModel<>();
@@ -25,7 +53,6 @@ public class ChatClientApp extends JFrame {
         chatBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane userListScrollPane = new JScrollPane(chatBox);
 
-        
         usernameLabel = new JLabel();
         messageInputField = new JTextField(20);
         sendButton = new JButton("Send");
@@ -41,8 +68,11 @@ public class ChatClientApp extends JFrame {
         inputPanel.add(messageInputField);
         inputPanel.add(sendButton);
 
-        // Panel for server IP input and connect button
+        // Panel for server IP input, port input, and connect button
         serverIPField = new JTextField(15);
+        serverIPField.setText("25.42.224.13");
+        portField = new JTextField(5); // Text field for port input
+        portField.setText("6066	");
         connectButton = new JButton("Connect");
         connectButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -53,6 +83,8 @@ public class ChatClientApp extends JFrame {
         JPanel serverPanel = new JPanel();
         serverPanel.add(new JLabel("Server IP: "));
         serverPanel.add(serverIPField);
+        serverPanel.add(new JLabel("Port: "));
+        serverPanel.add(portField); // Add port text field
         serverPanel.add(connectButton);
 
         // Layout
@@ -63,37 +95,136 @@ public class ChatClientApp extends JFrame {
 
         getContentPane().add(mainPanel);  // Adding main panel to the frame
 
+        // Add key listener to message input field
+        messageInputField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    sendMessage();
+                }
+            }
+        });
+        
         setVisible(true);  // Making the frame visible
     }
 
     private void sendMessage() {
-        String task = messageInputField.getText().trim();
-        if (!task.isEmpty()) {
-            messageListModel.addElement(task);  // Add message to the list model
+        String textMessage = messageInputField.getText().trim();
+        if (!textMessage.isEmpty()) {
+            
+        	String textToSend = username + MESSAGE_PROPERTY_DELIMETER + textMessage;
+        	
+            try {
+                // Attempt to establish a connection to the server
+                Socket clientS = new Socket(serverIP, port);
+
+                // Output data
+                OutputStream outputToServer = clientS.getOutputStream();
+                DataOutputStream outputData = new DataOutputStream(outputToServer);
+                outputData.writeUTF(textToSend); // Send a command to the server
+
+                System.out.println("Sent");
+
+                
+            } catch (Exception err) {
+                // Handle exceptions related to socket communication
+                System.out.println("Error in sendMessage");
+            }
+        	
+        	
+            try {
+                // Attempt to establish a connection to the server
+                Socket clientS = new Socket(serverIP, port);
+
+                // Output data
+                OutputStream outputToServer = clientS.getOutputStream();
+                DataOutputStream outputData = new DataOutputStream(outputToServer);
+                outputData.writeUTF("UPDATE"); // Send a command to the server
+                
+    			//INPUT DATA
+    			InputStream inputFromServer = clientS.getInputStream();
+    			DataInputStream serverData = new DataInputStream(inputFromServer);
+    			
+    			// Read the drawing information from the server
+    			String inputString = serverData.readUTF();
+                
+    			System.out.println(inputString);
+    			
+    			
+    			messageListModel.clear();
+    			
+                
+                
+            } catch (Exception err) {
+                // Handle exceptions related to socket communication
+                System.out.println("Error in sendMessage");
+            }
+        	
+        	
+        	
+        	
+        	//get from server and add
+        	
+        	//messageListModel.addElement(textMessage);  // Add message to the list model
             messageInputField.setText("");  // Clear the message input field
+        
+        
+        
+        
+        
         } else {
             JOptionPane.showMessageDialog(this, "Please enter a message", "Error", JOptionPane.ERROR_MESSAGE);
         }
+        
+        
+        
     }
 
     private void connectToServer() {
-        String serverIP = serverIPField.getText().trim();
+        serverIP = serverIPField.getText().trim();
+        portStr = portField.getText().trim(); // Retrieve port number from the text field
+        port = 0;
+        
+        try {
+            port = Integer.parseInt(portStr); // Parse the port number as an integer
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Invalid port number", "Error", JOptionPane.ERROR_MESSAGE);
+            return; // Exit method if port number is invalid
+        }
+
         if (!serverIP.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Connecting to server at IP: " + serverIP, "Info", JOptionPane.INFORMATION_MESSAGE);
             
+        	JOptionPane.showMessageDialog(this, "Connecting to server at IP: " + serverIP + ", Port: " + port, "Info", JOptionPane.INFORMATION_MESSAGE);
             // Prompt for username
             username = JOptionPane.showInputDialog(this, "Enter Username:");
-            
-            //send username to server
-            
-            //set usernameLabel
+            // Send username to server (To be implemented)
+            // Set usernameLabel
             usernameLabel.setText(username);
-            
             // Check username
             if (!validateCredentials(username)) {
                 JOptionPane.showMessageDialog(this, "Invalid username. Exiting...", "Error", JOptionPane.ERROR_MESSAGE);
                 System.exit(0); // Terminate the application
             }
+            
+            try {
+                // Attempt to establish a connection to the server
+                Socket clientS = new Socket(serverIP, port);
+
+                //String inputText = username + MESSAGE_SET_DELIMETER + messageInputField.getText();
+                String inputText = username + MESSAGE_PROPERTY_DELIMETER + "CONNECT";
+                // Output data
+                OutputStream outputToServer = clientS.getOutputStream();
+                DataOutputStream outputData = new DataOutputStream(outputToServer);
+                outputData.writeUTF(inputText); // Send a command to the server
+
+                System.out.println("Connected");
+
+            } catch (Exception err) {
+                // Handle exceptions related to socket communication
+                System.out.println("Error in Connection");
+            }
+            
+
             
         } else {
             JOptionPane.showMessageDialog(this, "Please enter the server IP address", "Error", JOptionPane.ERROR_MESSAGE);
@@ -101,8 +232,7 @@ public class ChatClientApp extends JFrame {
     }
     
     private boolean validateCredentials(String username) {
-    	
-        return username.equals("renzo") || username.equals("dhuvid") || username.equals("warren");
+        return username.equals("Renzo") || username.equals("Dhuvid") || username.equals("Warin");
     }
 
     public static void main(String[] args) {
