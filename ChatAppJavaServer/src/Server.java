@@ -32,10 +32,10 @@ public class Server extends Thread {
 				System.out.println(clientInput);
 				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 				// server output
-				String resJsonStr = handleClientInput(clientInput);
-				System.out.println(resJsonStr);
+				String serverOutput = handleClientInput(clientInput);
+				System.out.println(serverOutput);
 				System.out.println("=================================");
-				out.writeUTF(resJsonStr);
+				out.writeUTF(serverOutput);
 				socket.close();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -45,11 +45,26 @@ public class Server extends Thread {
 	
 	private String handleClientInput(String clientInput) {
 		System.out.println("clientInput");
-		if (clientInput.equals("UPDATE")) {
-			return messageManager.getAllMessages();
-		} else {
-			messageManager.addMessage(clientInput);
+		try {
+			if (validConnect(clientInput)) {
+				String[] splitMessage = clientInput.split(MessageManager.MESSAGE_PROPERTY_DELIMETER);
+				return "Successfully connected to server, " + splitMessage[0];
+			} else if (clientInput.equals("UPDATE")) {
+				return messageManager.getAllMessages();
+			} else {
+				messageManager.addMessage(clientInput);
+			}
+			return "Success";
+		} catch (Exception e) {
+			return "ERROR:" + e.toString();
 		}
-		return "Success";
+	}
+	
+	private boolean validConnect(String clientInput) {
+		String[] splitMessage = clientInput.split(MessageManager.MESSAGE_PROPERTY_DELIMETER);
+		if (splitMessage.length == 2 && splitMessage[1].equals("CONNECT")) {
+			return true;
+		};
+		return false;
 	}
 }
