@@ -33,5 +33,9 @@ public class EmojiHashMap {
             System.out.println("Emoji code not found: " + emojiCode);
         }
     }
+    
+    public static String[] getKeys() {
+    	return emojiMap.keySet().toArray(new String[emojiMap.size()]);
+    }
 
 }

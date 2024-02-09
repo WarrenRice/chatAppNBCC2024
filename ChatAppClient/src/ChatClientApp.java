@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.net.URL;
 
 
 public class ChatClientApp extends JFrame {
@@ -73,16 +75,9 @@ public class ChatClientApp extends JFrame {
 
     private void sendMessage() {
         String message = messageInputField.getText().trim();
+        
         if (!message.isEmpty()) {
-            if (message.startsWith("image:")) {
-                // If the message starts with "image:", it's an image message
-                String imagePath = message.substring(6); // Remove "image:" prefix
-                messageListModel.addElement(imagePath); // Add the image message to the list model
-               
-            } else {
-                // Otherwise, it's a text message
-                messageListModel.addElement(message); // Add the text message to the list model
-            }
+            messageListModel.addElement(message); // Add the text message to the list model
             messageInputField.setText(""); // Clear the message input field
         } else {
             JOptionPane.showMessageDialog(this, "Please enter a message", "Error", JOptionPane.ERROR_MESSAGE);
@@ -92,19 +87,22 @@ public class ChatClientApp extends JFrame {
 
 	public class EmojiListRenderer extends DefaultListCellRenderer {
 		private static final long serialVersionUID = 1L;
-
 		@Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
             JLabel renderer = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
             String word = (String) value;
             String imagePath = EmojiHashMap.imagePath(word);
-            if (imagePath != null) {
-                ImageIcon icon = new ImageIcon(imagePath);
-                icon = new ImageIcon(icon.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
-                renderer.setIcon(icon);
-                renderer.setText(""); // Clear text
+            String[] emojiKeys = EmojiHashMap.getKeys();
+            for (int i = 0; i < emojiKeys.length; i++) {
+            	if (word.contains(emojiKeys[i])) {
+//            		String html = "<html><body> <img src=\"" + getClass().getResource("emojis/angry.png") + "\" width=24 height=24 /></body></html>";
+            		String html = "<img src=\"" + getClass().getResource(EmojiHashMap.imagePath(emojiKeys[i])) + "\" width=24 height=24 />";
+            		word = word.replace(emojiKeys[i], html);
+            	}
             }
+            
+                
+            renderer.setText("<html><body>" + word + "</body></html>"); // Clear text
 
             return renderer;
         }
