@@ -1,6 +1,8 @@
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.DataInputStream;
@@ -8,6 +10,8 @@ import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -16,6 +20,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -26,6 +31,7 @@ import javax.swing.SwingUtilities;
 
 public class ChatClientApp extends JFrame {
     private JList<String> chatBox;  // JList for displaying messages
+    private JScrollPane chatListScrollPane;
     private DefaultListModel<String> messageListModel;  // DefaultListModel to store messages
     private JTextField messageInputField;  // Text field for typing messages
     private JButton sendButton;  // Button to send messages
@@ -45,6 +51,8 @@ public class ChatClientApp extends JFrame {
     
     private MessageManager mManager;
     
+    private Timer updateTimer;
+    
     //private static final String MESSAGE_PROPERTY_DELIMETER = "▐";
     //private static final String MESSAGE_SET_DELIMETER = "†";
     
@@ -59,7 +67,9 @@ public class ChatClientApp extends JFrame {
         messageListModel = new DefaultListModel<>();
         chatBox = new JList<>(messageListModel);
         chatBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane userListScrollPane = new JScrollPane(chatBox);
+        chatListScrollPane = new JScrollPane(chatBox);	// Create a JScrollPane and add the JList to it
+        // Enable vertical scroll bar policy
+        chatListScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
         usernameLabel = new JLabel();
         messageInputField = new JTextField(20);
@@ -99,7 +109,7 @@ public class ChatClientApp extends JFrame {
 
         // Layout
         mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(userListScrollPane, BorderLayout.CENTER);  // Adding chat box to the main panel
+        mainPanel.add(chatListScrollPane, BorderLayout.CENTER);  // Adding chat box to the main panel
         mainPanel.add(inputPanel, BorderLayout.SOUTH);  // Adding input panel to the bottom of the main panel
         mainPanel.add(serverPanel, BorderLayout.NORTH);  // Adding server panel to the top of the main panel
 
@@ -118,6 +128,45 @@ public class ChatClientApp extends JFrame {
         inputPanel.setVisible(false);	//hide
         
         setVisible(true);  // Making the frame visible
+        
+        
+    }
+    
+    private void startUpdateTimer() {
+        updateTimer = new Timer();
+        updateTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                sendUpdateMessage();
+                
+                /*
+                int lastIndex = messageListModel.getSize() - 1;
+                if (lastIndex >= 0) {
+                    chatBox.ensureIndexIsVisible(lastIndex);
+                }
+                */
+            }
+        }, 100, 1000); // Delay 0ms, repeat every 1000ms (1 second)
+    }
+    
+    private void sendUpdateMessage() {
+        try {
+            // Attempt to establish a connection to the server
+            Socket clientS = new Socket(serverIP, port);
+
+            // Output data
+            OutputStream outputToServer = clientS.getOutputStream();
+            DataOutputStream outputData = new DataOutputStream(outputToServer);
+            outputData.writeUTF("UPDATE"); // Send a command to the server
+
+            //System.out.println("Sent UPDATE message to server");
+            clientS.close(); // Close the socket after sending the message
+        } catch (Exception err) {
+            // Handle exceptions related to socket communication
+            System.out.println("Error sending UPDATE message to server: " + err.getMessage());
+        }
+        
+        updateMessage();
     }
 
     private void sendMessage() {
@@ -137,7 +186,7 @@ public class ChatClientApp extends JFrame {
 
                 System.out.println("Sent");
 
-                
+                clientS.close();
             } catch (Exception err) {
                 // Handle exceptions related to socket communication
                 System.out.println("Error in sendMessage");
@@ -149,17 +198,10 @@ public class ChatClientApp extends JFrame {
         	
         	//messageListModel.addElement(textMessage);  // Add message to the list model
             messageInputField.setText("");  // Clear the message input field
-        
-        
-        
-        
-        
+
         } else {
             JOptionPane.showMessageDialog(this, "Please enter a message", "Error", JOptionPane.ERROR_MESSAGE);
         }
-        
-        
-        
     }
 
     private void connectToServer() {
@@ -204,14 +246,14 @@ public class ChatClientApp extends JFrame {
 
                 System.out.println("Connected");
                 inputPanel.setVisible(true);
+                startUpdateTimer();
                 
+                clientS.close();
             } catch (Exception err) {
                 // Handle exceptions related to socket communication
                 System.out.println("Error in Connection");
             }
-            
 
-            
         } else {
             JOptionPane.showMessageDialog(this, "Please enter the server IP address", "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -237,33 +279,48 @@ public class ChatClientApp extends JFrame {
 			// Read the drawing information from the server
 			String serverString = serverData.readUTF();
             
-			System.out.println(serverString);
+			//System.out.println(serverString);
 			
 			mManager.splitMessage(serverString);
 			
-			System.out.println(mManager.messages.size());
+			//System.out.println(mManager.messages.size());
 			
 			for (String s : mManager.messages) {
-				System.out.println(s);
+				//System.out.println(s);
 				messageListModel.addElement(s);
 			}
 
-            
+			clientS.close();
+
         } catch (Exception err) {
             // Handle exceptions related to socket communication
             System.out.println("Error in sendMessage");
         }
+        
+        //scroll to bottom
+        /*
+        int lastIndex = messageListModel.getSize() - 1;
+        if (lastIndex >= 0) {
+            chatBox.ensureIndexIsVisible(lastIndex);
+        }
+		*/
     }
     
     private boolean validateCredentials(String username) {
         return username.equals("Renzo") || username.equals("Dhuvid") || username.equals("Warin");
     }
 
+    /*
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new ChatClientApp();
             }
         });
+    }
+    */
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new ChatClientApp());
     }
 }

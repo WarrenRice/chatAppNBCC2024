@@ -23,7 +23,7 @@ public class MessageManager {
 		        s = s.replaceFirst("▐", ":   ");
 		        // Replace the second "▐ " with "<-"
 		        s = s.replaceFirst("▐", "   <-");
-		        System.out.println(s);
+		        //System.out.println(s);
 				messages.add(s);
 			}
 		}
