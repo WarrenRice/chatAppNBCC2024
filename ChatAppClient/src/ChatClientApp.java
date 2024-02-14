@@ -13,14 +13,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.DefaultListCellRenderer;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -34,7 +32,6 @@ public class ChatClientApp extends JFrame {
 
 	private JList<String> chatBox; // JList for displaying messages
 	private JScrollPane chatListScrollPane;
-//	private DefaultListModel<String> messageListModel; // DefaultListModel to store messages
 	private JTextField messageInputField; // Text field for typing messages
 	private JButton sendButton; // Button to send messages
 	private JTextField serverIPField; // Text field for entering server IP address
@@ -68,7 +65,6 @@ public class ChatClientApp extends JFrame {
 		mManager = new MessageManager();
 
 		// Initialize components
-//		messageListModel = new DefaultListModel<>();
 		chatBox = new JList<>(mManager.getMessages());
 		chatBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		chatListScrollPane = new JScrollPane(chatBox); // Create a JScrollPane and add the JList to it
@@ -201,7 +197,6 @@ public class ChatClientApp extends JFrame {
 
 			// get from server and add
 
-			// messageListModel.addElement(textMessage); // Add message to the list model
 			messageInputField.setText(""); // Clear the message input field
 
 		} else {
@@ -337,9 +332,6 @@ public class ChatClientApp extends JFrame {
 	}
 
 	public void scrollToBottom() {
-//		JScrollBar vScrollbar = chatListScrollPane.getVerticalScrollBar();
-//		vScrollbar.setValue(vScrollbar.getMaximum());
-//		System.out.println(vScrollbar.getMaximum() + 24);
 		int lastIndex = chatBox.getModel().getSize() - 1;
 		if (lastIndex >= 0) {
 			chatBox.ensureIndexIsVisible(lastIndex);
