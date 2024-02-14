@@ -13,7 +13,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.DefaultListCellRenderer;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -33,7 +32,6 @@ public class ChatClientApp extends JFrame {
 
 	private JList<String> chatBox; // JList for displaying messages
 	private JScrollPane chatListScrollPane;
-	private DefaultListModel<String> messageListModel; // DefaultListModel to store messages
 	private JTextField messageInputField; // Text field for typing messages
 	private JButton sendButton; // Button to send messages
 	private JTextField serverIPField; // Text field for entering server IP address
@@ -54,6 +52,8 @@ public class ChatClientApp extends JFrame {
 
 	private Timer updateTimer;
 
+	private boolean initialUpdate = false;
+
 	// private static final String MESSAGE_PROPERTY_DELIMETER = "▐";
 	// private static final String MESSAGE_SET_DELIMETER = "†";
 
@@ -65,8 +65,7 @@ public class ChatClientApp extends JFrame {
 		mManager = new MessageManager();
 
 		// Initialize components
-		messageListModel = new DefaultListModel<>();
-		chatBox = new JList<>(messageListModel);
+		chatBox = new JList<>(mManager.getMessages());
 		chatBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		chatListScrollPane = new JScrollPane(chatBox); // Create a JScrollPane and add the JList to it
 		// Enable vertical scroll bar policy
@@ -78,6 +77,7 @@ public class ChatClientApp extends JFrame {
 		sendButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				sendMessage();
+				scrollToBottom();
 			}
 		});
 
@@ -89,8 +89,8 @@ public class ChatClientApp extends JFrame {
 
 		// Panel for server IP input, port input, and connect button
 		serverIPField = new JTextField(15);
-		// serverIPField.setText("25.42.224.13");
-		serverIPField.setText("localhost");
+		serverIPField.setText("25.42.224.13");
+//		serverIPField.setText("localhost");
 		portField = new JTextField(5); // Text field for port input
 		portField.setText("6066	");
 		connectButton = new JButton("Connect");
@@ -139,11 +139,10 @@ public class ChatClientApp extends JFrame {
 			@Override
 			public void run() {
 				sendUpdateMessage();
-
-				/*
-				 * int lastIndex = messageListModel.getSize() - 1; if (lastIndex >= 0) {
-				 * chatBox.ensureIndexIsVisible(lastIndex); }
-				 */
+				if (!initialUpdate) {
+					scrollToBottom();
+					initialUpdate = true;
+				}
 			}
 		}, 100, 1000); // Delay 0ms, repeat every 1000ms (1 second)
 	}
@@ -198,7 +197,6 @@ public class ChatClientApp extends JFrame {
 
 			// get from server and add
 
-			// messageListModel.addElement(textMessage); // Add message to the list model
 			messageInputField.setText(""); // Clear the message input field
 
 		} else {
@@ -284,11 +282,11 @@ public class ChatClientApp extends JFrame {
 			JOptionPane.showMessageDialog(this, "Please enter the server IP address", "Error",
 					JOptionPane.ERROR_MESSAGE);
 		}
+		connectButton.setVisible(false);
 	}
 
 	private void updateMessage() {
 		try {
-			messageListModel.clear();
 			mManager.clearMessages();
 			// Attempt to establish a connection to the server
 			Socket clientS = new Socket(serverIP, port);
@@ -311,23 +309,13 @@ public class ChatClientApp extends JFrame {
 
 			// System.out.println(mManager.messages.size());
 
-			for (String s : mManager.messages) {
-				// System.out.println(s);
-				messageListModel.addElement(s);
-			}
+			chatBox.setListData(mManager.getMessages());
 
 			clientS.close();
-
 		} catch (Exception err) {
 			// Handle exceptions related to socket communication
 			System.out.println("Error in sendMessage");
 		}
-
-		// scroll to bottom
-		/*
-		 * int lastIndex = messageListModel.getSize() - 1; if (lastIndex >= 0) {
-		 * chatBox.ensureIndexIsVisible(lastIndex); }
-		 */
 	}
 
 	private boolean validateCredentials(String username) {
@@ -341,5 +329,13 @@ public class ChatClientApp extends JFrame {
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> new ChatClientApp());
+	}
+
+	public void scrollToBottom() {
+		int lastIndex = chatBox.getModel().getSize() - 1;
+		if (lastIndex >= 0) {
+			chatBox.ensureIndexIsVisible(lastIndex);
+		}
+
 	}
 }

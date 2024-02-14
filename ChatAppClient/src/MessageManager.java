@@ -28,4 +28,9 @@ public class MessageManager {
 			}
 		}
 	}
+	
+	public String[] getMessages() {
+		String[] arr = new String[messages.size()];
+		return messages.toArray(arr);
+	}
 }
