@@ -328,18 +328,6 @@ public class ChatClientApp extends JFrame {
 		}
 	}
 
-	// Method to validate user credentials
-	/*
-	private boolean validateCredentials(String username) {
-		// Check if username is valid
-		return username.equals("Renzo") || username.equals("Dhuvid") || username.equals("Warin");
-	}
-	*/
-
-	/*
-	 * public static void main(String[] args) { SwingUtilities.invokeLater(new
-	 * Runnable() { public void run() { new ChatClientApp(); } }); } }
-	 */
 	
 	// Method to scroll the chat box to the bottom
 	public void scrollToBottom() {

@@ -1,5 +1,7 @@
 import javax.swing.ImageIcon;
 
+
+//For debugging purpose
 public class ChatMessage {
     // Enum to represent different types of messages (text or image)
     public enum Type {

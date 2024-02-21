@@ -26,19 +26,6 @@ public class EmojiHashMap {
         return null;	// Return null if emoji code is not found
     }
     
-    // Main method for testing
-    /*
-    public static void main(String[] args) {
-        String emojiCode = ":smile:";
-    
-        String imagePath = EmojiHashMap.imagePath(emojiCode);
-        if (imagePath != null) {
-            System.out.println("Emoji found! Image path: " + imagePath);
-        } else {
-            System.out.println("Emoji code not found: " + emojiCode);
-        }
-    }
-    */
     
     // Method to retrieve all keys (emoji codes) from the emoji map
     public static String[] getKeys() {
